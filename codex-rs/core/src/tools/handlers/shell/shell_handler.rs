@@ -64,6 +64,7 @@ impl ShellHandler {
     }
 }
 
+#[async_trait::async_trait]
 impl ToolExecutor<ToolInvocation> for ShellHandler {
     type Output = FunctionToolOutput;
 

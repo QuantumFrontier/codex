@@ -8,6 +8,7 @@ struct TestHandler {
     tool_name: codex_tools::ToolName,
 }
 
+#[async_trait::async_trait]
 impl ToolExecutor<ToolInvocation> for TestHandler {
     type Output = crate::tools::context::FunctionToolOutput;
 

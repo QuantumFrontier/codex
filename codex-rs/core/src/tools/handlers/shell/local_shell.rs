@@ -32,6 +32,7 @@ impl LocalShellHandler {
     }
 }
 
+#[async_trait::async_trait]
 impl ToolExecutor<ToolInvocation> for LocalShellHandler {
     type Output = FunctionToolOutput;
 

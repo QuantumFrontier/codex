@@ -12,6 +12,7 @@ use super::*;
 
 pub struct SpawnAgentsOnCsvHandler;
 
+#[async_trait::async_trait]
 impl ToolExecutor<ToolInvocation> for SpawnAgentsOnCsvHandler {
     type Output = FunctionToolOutput;
 

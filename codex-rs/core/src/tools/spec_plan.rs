@@ -430,8 +430,8 @@ pub fn build_tool_registry_builder(
         }
     }
 
-    for bundle in params.extension_tool_bundles.iter().cloned() {
-        builder.register_tool_bundle(bundle);
+    for executor in params.extension_tool_executors.iter().cloned() {
+        builder.register_extension_tool_executor(executor);
     }
 
     builder

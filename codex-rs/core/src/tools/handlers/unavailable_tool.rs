@@ -37,6 +37,7 @@ pub(crate) fn unavailable_tool_message(
     )
 }
 
+#[async_trait::async_trait]
 impl ToolExecutor<ToolInvocation> for UnavailableToolHandler {
     type Output = FunctionToolOutput;
 

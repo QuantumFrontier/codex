@@ -18,14 +18,13 @@ use crate::tools::context::ToolInvocation;
 use crate::tools::context::ToolOutput;
 use crate::tools::context::ToolPayload;
 use crate::tools::flat_tool_name;
-use crate::tools::handlers::extension_tools::BundledToolHandler;
-use crate::tools::handlers::extension_tools::extension_tool_spec;
+use crate::tools::handlers::extension_tools::ExtensionToolHandler;
 use crate::tools::hook_names::HookToolName;
 use crate::tools::tool_dispatch_trace::ToolDispatchTrace;
 use crate::util::error_or_panic;
+use codex_extension_api::ExtensionToolExecutor;
 use codex_protocol::models::ResponseInputItem;
 use codex_protocol::protocol::EventMsg;
-use codex_tool_api::ToolBundle as ExtensionToolBundle;
 use codex_tools::ToolName;
 use codex_tools::ToolSpec;
 use codex_utils_readiness::Readiness;
@@ -192,7 +191,7 @@ where
     }
 
     fn is_mutating<'a>(&'a self, invocation: &'a ToolInvocation) -> BoxFuture<'a, bool> {
-        Box::pin(ToolExecutor::is_mutating(self, invocation))
+        ToolExecutor::is_mutating(self, invocation)
     }
 
     fn pre_tool_use_payload(&self, invocation: &ToolInvocation) -> Option<PreToolUsePayload> {
@@ -565,25 +564,18 @@ impl ToolRegistryBuilder {
         self.handlers.insert(name, handler);
     }
 
-    pub fn register_tool_bundle(&mut self, bundle: ExtensionToolBundle) {
-        let tool_name = ToolName::plain(bundle.tool_name());
+    pub fn register_extension_tool_executor(&mut self, executor: Arc<ExtensionToolExecutor>) {
+        let tool_name = executor.tool_name();
         if self.handlers.contains_key(&tool_name) {
             warn!("Skipping extension tool `{tool_name}`: handler already registered");
             return;
         }
 
-        let spec = match extension_tool_spec(bundle.spec()) {
-            Ok(spec) => spec,
-            Err(error) => {
-                error_or_panic(format!(
-                    "failed to convert extension tool `{tool_name}` to a host spec: {error}"
-                ));
-                return;
-            }
-        };
-        self.push_spec(spec.clone());
+        if let Some(spec) = executor.spec() {
+            self.push_spec(spec);
+        }
 
-        let handler: Arc<dyn AnyToolHandler> = Arc::new(BundledToolHandler::new(bundle, spec));
+        let handler: Arc<dyn AnyToolHandler> = Arc::new(ExtensionToolHandler::new(executor));
         self.handlers.insert(tool_name, handler);
     }
 

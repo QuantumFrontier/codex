@@ -83,6 +83,7 @@ impl CodeModeExecuteHandler {
     }
 }
 
+#[async_trait::async_trait]
 impl ToolExecutor<ToolInvocation> for CodeModeExecuteHandler {
     type Output = FunctionToolOutput;
 

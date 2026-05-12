@@ -23,6 +23,7 @@ use super::shell_handler::ShellHandler;
 
 pub struct ContainerExecHandler;
 
+#[async_trait::async_trait]
 impl ToolExecutor<ToolInvocation> for ContainerExecHandler {
     type Output = FunctionToolOutput;
 

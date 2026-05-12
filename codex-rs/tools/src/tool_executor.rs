@@ -1,4 +1,4 @@
-use std::future::Future;
+use std::sync::Arc;
 
 use crate::FunctionCallError;
 use crate::ToolName;
@@ -10,7 +10,11 @@ use crate::ToolSpec;
 /// Implementations keep the model-visible spec tied to the executable runtime.
 /// Host crates can layer routing, hooks, telemetry, or other orchestration on
 /// top without reopening the spec/runtime split.
-pub trait ToolExecutor<Invocation>: Send + Sync {
+#[async_trait::async_trait]
+pub trait ToolExecutor<Invocation>: Send + Sync
+where
+    Invocation: Send + Sync + 'static,
+{
     type Output: ToolOutput + 'static;
 
     /// The concrete tool name handled by this runtime instance.
@@ -28,12 +32,38 @@ pub trait ToolExecutor<Invocation>: Send + Sync {
     ///
     /// Implementations should remain defensive and return `true` whenever the
     /// exact effect of an invocation is uncertain.
-    fn is_mutating(&self, _invocation: &Invocation) -> impl Future<Output = bool> + Send {
-        async { false }
+    async fn is_mutating(&self, _invocation: &Invocation) -> bool {
+        false
     }
 
-    fn handle(
-        &self,
-        invocation: Invocation,
-    ) -> impl Future<Output = Result<Self::Output, FunctionCallError>> + Send;
+    async fn handle(&self, invocation: Invocation) -> Result<Self::Output, FunctionCallError>;
+}
+
+#[async_trait::async_trait]
+impl<Invocation, T> ToolExecutor<Invocation> for Arc<T>
+where
+    Invocation: Send + Sync + 'static,
+    T: ToolExecutor<Invocation> + ?Sized,
+{
+    type Output = T::Output;
+
+    fn tool_name(&self) -> ToolName {
+        (**self).tool_name()
+    }
+
+    fn spec(&self) -> Option<ToolSpec> {
+        (**self).spec()
+    }
+
+    fn supports_parallel_tool_calls(&self) -> bool {
+        (**self).supports_parallel_tool_calls()
+    }
+
+    async fn is_mutating(&self, invocation: &Invocation) -> bool {
+        (**self).is_mutating(invocation).await
+    }
+
+    async fn handle(&self, invocation: Invocation) -> Result<Self::Output, FunctionCallError> {
+        (**self).handle(invocation).await
+    }
 }

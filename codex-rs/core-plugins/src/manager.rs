@@ -925,7 +925,7 @@ impl PluginsManager {
         notify.notify_waiters();
     }
 
-    pub async fn get_remote_marketplaces_with_caching(
+    pub async fn fetch_remote_plugin_with_caching(
         &self,
         config: &PluginsConfigInput,
         auth: Option<&CodexAuth>,
@@ -1682,7 +1682,7 @@ impl PluginsManager {
                         on_effective_plugins_changed,
                     );
                     if let Err(err) = manager
-                        .get_remote_marketplaces_with_caching(
+                        .fetch_remote_plugin_with_caching(
                             &config,
                             auth.as_ref(),
                             &[RemoteMarketplaceSource::Global],

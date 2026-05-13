@@ -502,11 +502,7 @@ impl PluginRequestProcessor {
         }
         if !remote_sources.is_empty() {
             match plugins_manager
-                .get_remote_marketplaces_with_caching(
-                    &plugins_input,
-                    auth.as_ref(),
-                    &remote_sources,
-                )
+                .fetch_remote_plugin_with_caching(&plugins_input, auth.as_ref(), &remote_sources)
                 .await
             {
                 Ok(remote_marketplaces) => {
